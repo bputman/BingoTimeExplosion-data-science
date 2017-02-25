@@ -1,0 +1,43 @@
+cd Documents
+cd testData
+
+close all;clear;clc;
+# load data
+strBi = csvread('StrengthBi_ZerosRemoved.csv');
+
+# initial simple scatterplot matrix
+Xgraph = horzcat(strBi(:,4),strBi(:,8:10));
+#Xgraph = horzcat(strBi(:,4),strBi(:,8:10), strBi(:,14))
+plotmatrix(Xgraph, 'g+');
+
+# check correlation matrix
+corr(Xgraph)
+
+# create matrix to perform normal equation calculation
+xSize = size(Xgraph);
+
+X = horzcat(ones(xSize(1), 1), Xgraph);
+Y = strBi(:, 15);
+
+Theta = pinv(X'*X) * X'*Y; 
+
+# Theta, our coefficient array, is now produced. We can compare the actual dependent variable array Y to the estimated X*Theta array to look at amount of error.
+
+Yest = X * Theta;
+e = Y - Yest;
+
+hist(e,50);
+title('Histogram of (obs - pre) errors.');
+
+#plot data together with observed and predicted data.
+plotmatrix(horzcat(Xgraph, Y, Yest), 'g+');
+
+# check if errors are normally distributed.
+qqplot(e);
+title('QQ plot comparing errors to standard normal distribution.');
+
+# check if observed values and predicted values follow the same distribution
+qqplot(Y, Yest);
+title('QQ plot comparing observed versus predicted values');
+xlabel('Observed values');
+ylabel('Predicted values');
