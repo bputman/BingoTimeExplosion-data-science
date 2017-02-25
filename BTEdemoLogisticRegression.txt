@@ -1,0 +1,50 @@
+cd Documents
+cd testData
+
+close all;clear;clc;
+# load data
+strBi = csvread('StrengthBi_ZerosRemoved.csv');
+q1x = horzcat(strBi(:,9), strBi(:,14:15));
+# initial simple scatterplot matrix
+#X = horzcat(strBi(:,4),strBi(:,8:10), strBi(:,14));
+
+X = [ones(size(q1x,1),1), q1x];
+Y = strBi(:, 4);
+Xsize = size(X);
+
+m = size(X,1);
+n = size(X,2)-1;
+
+theta = zeros(n+1,1);
+thetaold = ones(n+1,1);
+J = zeros(1,15);
+count = 1;
+while ( ((theta-thetaold)'*(theta-thetaold)) > 0.0000001 )
+    %calculate dellltheta
+    dellltheta = zeros(n+1,1);
+    for j=1:n+1,
+        for i=1:m,
+            dellltheta(j,1) = dellltheta(j,1) + [Y(i,1) - (1/(1 + exp(-theta'*X(i,:)')))]*X(i,j);
+        end;
+    end;
+    %calculate hessian
+    H = zeros(n+1, n+1);
+    for j=1:n+1,
+        for k=1:n+1,
+                for i=1:m,
+                    H(j,k) = H(j,k) -[1/(1 + exp(-theta'*X(i,:)'))]*[1-(1/(1 + exp(-theta'*X(i,:)')))]*[X(i,j)]*[X(i,k)];
+                end;
+        end;
+    end;
+    thetaold = theta;
+    theta = theta - inv(H)*dellltheta;
+    (theta-thetaold)'*(theta-thetaold)
+    J(count) = (theta-thetaold)'*(theta-thetaold);
+    count += 1; 
+end
+
+plot(J);
+
+Yest = (1/(1+exp(-X*theta)))';
+e = Y - Yest;
+hist(e);
